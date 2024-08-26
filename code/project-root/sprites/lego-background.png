@@ -1,0 +1,21 @@
+function generateBackgroundPlaceholder() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 800;
+    canvas.height = 600;
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = 'lightgray';
+    ctx.fillRect(0, 0, canvas.width, canvas.height); // Light gray background
+
+    ctx.fillStyle = 'green';
+    for (let i = 0; i < canvas.width; i += 40) {
+        for (let j = 0; j < canvas.height; j += 40) {
+            ctx.fillRect(i, j, 20, 20); // Green squares
+        }
+    }
+
+    document.body.appendChild(canvas); // Add canvas to body to view it
+    saveCanvasAsImage(canvas, 'lego-background.png');
+}
+
+generateBackgroundPlaceholder();

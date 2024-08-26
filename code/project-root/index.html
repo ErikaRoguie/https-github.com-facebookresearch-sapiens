@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lego Video Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+        #gameContainer {
+            display: none;
+        }
+        #chapterDisplay {
+            margin-top: 20px;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Lego Video Game</h1>
+    <div id="menu">
+        <h2>Upload Your Book</h2>
+        <form id="uploadForm">
+            <input type="file" id="bookFile" accept=".txt, .json">
+            <button type="submit">Upload</button>
+        </form>
+        <button id="startGameButton" disabled>Start Game</button>
+        <div id="instructions">
+            <h3>Controls</h3>
+            <p><strong>Left Arrow:</strong> Move Left</p>
+            <p><strong>Right Arrow:</strong> Move Right</p>
+            <p><strong>Up Arrow:</strong> Jump</p>
+            <p><strong>Space:</strong> Next Chapter</p>
+        </div>
+    </div>
+    <div id="gameContainer">
+        <canvas id="game" width="800" height="600"></canvas>
+        <div id="chapterDisplay"></div>
+    </div>
+
+    <script>
+        function generateCharacterPlaceholder() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 100;
+            canvas.height = 100;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(10, 10, 80, 80); // A simple blue square
+
+            document.body.appendChild(canvas); // Add canvas to body to view it
+            saveCanvasAsImage(canvas, 'lego-character.png');
+        }
+
+        function generateBackgroundPlaceholder() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 800;
+            canvas.height = 600;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = 'lightgray';
+            ctx.fillRect(0, 0, canvas.width, canvas.height); // Light gray background
+
+            ctx.fillStyle = 'green';
+            for (let i = 0; i < canvas.width; i += 40) {
+                for (let j = 0; j < canvas.height; j += 40) {
+                    ctx.fillRect(i, j, 20, 20); // Green squares
+                }
+            }
+
+            document.body.appendChild(canvas); // Add canvas to body to view it
+            saveCanvasAsImage(canvas, 'lego-background.png');
+        }
+
+        function saveCanvasAsImage(canvas, fileName) {
+            const link = document.createElement('a');
+            link.download = fileName;
+            link.href = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
+            link.click();
+        }
+
+        // Generate the placeholders when the page loads
+        generateCharacterPlaceholder();
+        generateBackgroundPlaceholder();
+        
+        // Ensure the Start Game button only gets enabled once images are available
+        window.addEventListener('load', () => {
+            document.getElementById('startGameButton').disabled = false;
+        });
+
+        document.getElementById('uploadForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const file = document.getElementById('bookFile').files[0];
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                const text = e.target.result;
+                const chapters = parseBook(text);
+
+                window.chapters = chapters; // Store chapters globally
+                document.getElementById('startGameButton').disabled = false;
+            };
+
+            reader.readAsText(file);
+        });
+
+        function parseBook(text) {
+            // Logic to parse book text goes here
+            // Example: Split text into chapters, sentences, etc.
+            const chapters = text.split(/\r?\n\r?\n/); // Split by empty lines
+            return chapters;
+        }
+
+        document.getElementById('startGameButton').onclick = function () {
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('gameContainer').style.display = 'block';
+
+            if (!window.chapters || window.chapters.length === 0) {
+                alert("No chapters found. Please upload a valid book.");
+                return;
+            }
+
+            initializeGame();
+            loadChapter(window.chapters[currentChapter]);
+        };
+
+        function initializeGame() {
+            kaboom({
+                global: true,
+                fullscreen: true,
+                clearColor: [0, 0, 0, 1],
+            });
+
+            loadSprite("lego-character", "/sprites/lego-character.png");
+            loadSprite("lego-background", "/sprites/lego-background.png");
+
+            createPlayer();
+            createBackground();
+            initializeControls();
+        }
+
+        function createPlayer() {
+            window.player = add([
+                sprite("lego-character"),
+                pos(80, 40),
+                area(),
+                body(),
+            ]);
+        }
+
+        function createBackground() {
+            add([
+                sprite("lego-background"),
+                pos(0, 0),
+                area(),
+                "background",
+            ]);
+        }
+
+        function initializeControls() {
+            keyDown("left", () => {
+                window.player.move(-120, 0);
+            });
+
+            keyDown("right", () => {
+                window.player.move(120, 0);
+            });
+
+            keyDown("up", () => {
+                if (window.player.grounded()) {
+                    window.player.jump(400);
+                }
+            });
+        }
+
+        let currentChapter = 0;
+
+        function loadChapter(chapterText) {
+            destroyAll("lego-character");
+            destroyAll("background");
+
+            createPlayer();
+            createBackground();
+
+            document.getElementById('chapterDisplay').innerText = chapterText;
+        }
+
+        function nextChapter() {
+            currentChapter++;
+            if (currentChapter < window.chapters.length) {
+                loadChapter(window.chapters[currentChapter]);
+            } else {
+                document.getElementById('chapterDisplay').innerText = "The End";
+            }
+        }
+
+        keyPress("space", () => {
+            nextChapter();
+        });
+    </script>
+    <script src="/upload.js"></script>
+    <script src="/main.js"></script>
+</body>
+</html>

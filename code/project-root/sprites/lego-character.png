@@ -1,0 +1,21 @@
+function generateCharacterPlaceholder() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 100;
+    canvas.height = 100;
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(10, 10, 80, 80); // A simple blue square
+
+    document.body.appendChild(canvas); // Add canvas to body to view it
+    saveCanvasAsImage(canvas, 'lego-character.png');
+}
+
+function saveCanvasAsImage(canvas, fileName) {
+    const link = document.createElement('a');
+    link.download = fileName;
+    link.href = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
+    link.click();
+}
+
+generateCharacterPlaceholder();
